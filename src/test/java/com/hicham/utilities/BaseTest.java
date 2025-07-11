@@ -6,10 +6,14 @@ import com.aventstack.extentreports.Status;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.testng.ITestResult;
 import org.testng.annotations.*;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 
 public class BaseTest {
@@ -29,6 +33,21 @@ public class BaseTest {
 
     @BeforeMethod
     public void setUp(Method method) {
+
+        ChromeOptions options = new ChromeOptions();
+
+        try {
+            Path tempDir = Files.createTempDirectory("chrome-profile-");
+            options.addArguments("--user-data-dir=" + tempDir.toAbsolutePath().toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Optional for Jenkins (headless mode and stability)
+        options.addArguments("--headless=new");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+
         driver = new ChromeDriver();
         driver.manage().window().maximize();
 
