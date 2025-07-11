@@ -37,9 +37,15 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            archiveArtifacts artifacts: 'test-output/*.html', allowEmptyArchive: true
-        }
-    }
+   post {
+       always {
+           script {
+               if (fileExists("${env.REPORT_DIR}/extent-report.html")) {
+                   archiveArtifacts artifacts: 'test-output/*.html', allowEmptyArchive: true
+               } else {
+                   echo "No report found to archive."
+               }
+           }
+       }
+   }
 }
