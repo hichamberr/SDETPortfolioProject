@@ -37,15 +37,39 @@ pipeline {
         }
     }
 
-   post {
-       always {
-           script {
-               if (fileExists("${env.REPORT_DIR}/extent-report.html")) {
-                   archiveArtifacts artifacts: 'test-output/*.html', allowEmptyArchive: true
-               } else {
-                   echo "No report found to archive."
-               }
-           }
-       }
-   }
+    post {
+        always {
+            script {
+                if (fileExists("${env.REPORT_DIR}/extent-report.html")) {
+                    archiveArtifacts artifacts: 'test-output/*.html', allowEmptyArchive: true
+                } else {
+                    echo "No report found to archive."
+                }
+            }
+        }
+
+        success {
+            emailext(
+                subject: "✅ Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """<p>Good news! The Jenkins build succeeded.</p>
+                         <p><b>Job:</b> ${env.JOB_NAME}<br>
+                         <b>Build #:</b> ${env.BUILD_NUMBER}<br>
+                         <b>URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
+                mimeType: 'text/html',
+                to: 'your_email@gmail.com'
+            )
+        }
+
+        failure {
+            emailext(
+                subject: "❌ Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """<p>Unfortunately, the Jenkins build failed.</p>
+                         <p><b>Job:</b> ${env.JOB_NAME}<br>
+                         <b>Build #:</b> ${env.BUILD_NUMBER}<br>
+                         <b>URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>""",
+                mimeType: 'text/html',
+                to: 'your_email@gmail.com'
+            )
+        }
+    }
 }
