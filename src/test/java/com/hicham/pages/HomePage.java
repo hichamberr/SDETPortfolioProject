@@ -5,17 +5,19 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
-public class GoogleHomePage {
-    WebDriver driver;
-
-    public GoogleHomePage(WebDriver driver){
-        this.driver = driver;
+public class HomePage {
+    public HomePage(WebDriver driver) {
         PageFactory.initElements(driver, this);
     }
 
-    @FindBy(name = "q")
-    WebElement searchBox;
-    public String getTitle(){
-        return driver.getTitle();
+    @FindBy(xpath = "//a[contains(text(),'Logged in as')]")
+    private WebElement loggedInUserText;
+
+    public boolean isUserLoggedIn() {
+        return loggedInUserText.isDisplayed();
+    }
+
+    public String getLoggedInText() {
+        return loggedInUserText.getText();
     }
 }
