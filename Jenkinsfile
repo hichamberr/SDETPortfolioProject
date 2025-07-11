@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/hichamberr/SDETPortfolioProject.git', branch: 'main'
+                git url: 'https://github.com/hichamberr/SDETPortfolioProject.git', branch: 'master'
             }
         }
 
