@@ -1,23 +1,22 @@
 package com.hicham.utilities;
 
-import com.aventstack.extentreports.ExtentReports;
-import com.aventstack.extentreports.ExtentTest;
-import com.aventstack.extentreports.Status;
+import com.aventstack.extentreports.*;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.testng.ITestResult;
 import org.testng.annotations.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Date;
 
 public class BaseTest {
-
 
     protected WebDriver driver;
     protected static ExtentReports extent;
@@ -33,38 +32,40 @@ public class BaseTest {
 
     @BeforeMethod
     public void setUp(Method method) {
-
         ChromeOptions options = new ChromeOptions();
 
         try {
             Path tempDir = Files.createTempDirectory("chrome-profile-");
-            options.addArguments("--user-data-dir=" + tempDir.toAbsolutePath().toString());
+            options.addArguments("--user-data-dir=" + tempDir.toAbsolutePath());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // Optional for Jenkins (headless mode and stability)
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--disable-gpu"); // Extra for headless stability
+        options.addArguments("--remote-allow-origins=*"); // Fix for ChromeDriver security
 
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
-
-        // 🔄 Add this line for global wait
+        driver = new ChromeDriver(options);
+        driver.manage().window().setSize(new Dimension(1920, 1080));
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
 
-        // Create a new test log in the report
         test = extent.createTest(method.getName());
     }
 
     @AfterMethod
     public void tearDown(ITestResult result) {
-        // Log test result
         if (result.getStatus() == ITestResult.SUCCESS) {
             test.log(Status.PASS, "✅ Test Passed");
         } else if (result.getStatus() == ITestResult.FAILURE) {
             test.log(Status.FAIL, "❌ Test Failed: " + result.getThrowable());
+
+            // Capture screenshot on failure
+            String screenshotPath = captureScreenshot(result.getName());
+            if (screenshotPath != null) {
+                test.addScreenCaptureFromPath(screenshotPath);
+            }
         } else if (result.getStatus() == ITestResult.SKIP) {
             test.log(Status.SKIP, "⚠️ Test Skipped: " + result.getThrowable());
         }
@@ -76,6 +77,28 @@ public class BaseTest {
 
     @AfterSuite
     public void tearDownReport() {
-        extent.flush();
+        if (extent != null) {
+            extent.flush();
+        }
+    }
+
+    // Utility to capture screenshot
+    private String captureScreenshot(String testName) {
+        try {
+            TakesScreenshot ts = (TakesScreenshot) driver;
+            File source = ts.getScreenshotAs(OutputType.FILE);
+
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String destPath = "test-output/screenshots/" + testName + "_" + timestamp + ".png";
+
+            File destFile = new File(destPath);
+            destFile.getParentFile().mkdirs();
+            Files.copy(source.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            return destPath;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
