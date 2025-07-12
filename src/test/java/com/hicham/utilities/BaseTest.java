@@ -34,13 +34,6 @@ public class BaseTest {
     public void setUp(Method method) {
         ChromeOptions options = new ChromeOptions();
 
-        try {
-            Path tempDir = Files.createTempDirectory("chrome-profile-");
-            options.addArguments("--user-data-dir=" + tempDir.toAbsolutePath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         options.addArguments("--headless=new");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
