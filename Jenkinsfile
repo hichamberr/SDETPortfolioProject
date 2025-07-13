@@ -54,7 +54,7 @@ pipeline {
                             // 📝 Add comment to Jira issue
                             jiraAddComment idOrKey: key, comment: "✅ Jenkins Build #${env.BUILD_NUMBER} passed for job *${env.JOB_NAME}*."
                             // 🔁 Optionally, transition the issue to 'Done'
-                            jiraIssueTransition idOrKey: key, transition: 'Done'
+                            jiraIssueTransition idOrKey: key, transition: 'IN PROGRESS'
                         }
                     } else {
                         echo "No Jira issue keys found in commit messages."
