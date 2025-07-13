@@ -13,6 +13,7 @@ public class LoginTest extends BaseTest {
         driver.get("https://automationexercise.com");
 
         LoginPage loginPage = new LoginPage(driver);
+
         loginPage.goToLoginPage();
         loginPage.enterEmail("hichamberr480@gmail.com");
         loginPage.enterPassword("tecpef-xavjum-2xeJho");
