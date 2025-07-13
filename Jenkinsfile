@@ -2,12 +2,13 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven 3.8.4'  // Make sure Jenkins has this tool name configured
-        jdk 'jdk17'          // You can set this name in Jenkins Global Tool Config
+        maven 'Maven 3.8.4'
+        jdk 'jdk17'
     }
 
     environment {
         REPORT_DIR = "test-output"
+        JIRA_SITE = 'jira-auth' // 🔁 Replace 'jira' with your Jira site name configured in Jenkins
     }
 
     stages {
@@ -33,6 +34,32 @@ pipeline {
                     reportFiles: 'extent-report.html',
                     reportName: 'Extent Report'
                 ])
+            }
+        }
+
+        stage('Update Jira') {
+            steps {
+                script {
+                    // 🔍 Extract Jira issue keys like SDET-123 from Git commits
+                    def issueKeys = currentBuild.changeSets.collectMany { changeSet ->
+                        changeSet.items.collectMany { item ->
+                            def matcher = (item.msg =~ /([A-Z]+-\d+)/)
+                            matcher.collect { it[0] }
+                        }
+                    }.unique()
+
+                    if (issueKeys) {
+                        echo "Found Jira Issues: ${issueKeys}"
+                        issueKeys.each { key ->
+                            // 📝 Add comment to Jira issue
+                            jiraAddComment idOrKey: key, comment: "✅ Jenkins Build #${env.BUILD_NUMBER} passed for job *${env.JOB_NAME}*."
+                            // 🔁 Optionally, transition the issue to 'Done'
+                            jiraIssueTransition idOrKey: key, transition: 'Done'
+                        }
+                    } else {
+                        echo "No Jira issue keys found in commit messages."
+                    }
+                }
             }
         }
     }
@@ -80,4 +107,3 @@ pipeline {
         }
     }
 }
-
